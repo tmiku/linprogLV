@@ -18,7 +18,7 @@ import texttable as tt
 from scipy.special import sph_harm
 from shutil import copyfile
 
-bounds_order = ['s_00','s_10','-Re s_11','Im s_11','-s_20','-Re s_21','Im s_21','Re s_22','-Im s_22']
+bounds_order = ['s_00','s_10','Re s_11','Im s_11','s_20','Re s_21','Im s_21','Re s_22','Im s_22']
 
 
 def get_old_constraints(loc):
@@ -28,31 +28,6 @@ def get_old_constraints(loc):
     maxes = map(float,lines[2].split(','))
     cons = np.array([mins,maxes])
     return cons
-
-
-def new_constraints(opts):
-    ph = opts.ra * 360/24 * np.pi / 180 # azimuthal angle in radians
-    th = (90 - opts.dec) * np.pi / 180 # polar angle in radians
-
-    mins = []
-    maxes = []
-    d = 4
-
-    for j in range(d-1):
-        m = 0
-        maxes.append(opts.dvmax/(.5*(-1)**j*np.real(sph_harm(m,j,ph,th))))
-        mins.append(opts.dvmin/(.5*(-1)**j*np.real(sph_harm(m,j,ph,th))))
-
-        for m in range(1,j+1):
-            maxes.append(opts.dvmax/(.5*(-1)**j*np.real(sph_harm(m,j,ph,th))))
-            mins.append(opts.dvmin/(.5*(-1)**j*np.real(sph_harm(m,j,ph,th))))
-            maxes.append(-opts.dvmax/(.5*(-1)**j*np.imag(sph_harm(m,j,ph,th))))
-            mins.append(-opts.dvmin/(.5*(-1)**j*np.imag(sph_harm(m,j,ph,th))))
-
-    mins = -abs(np.array(mins))
-    maxes = abs(np.array(maxes))
-
-    return np.array([mins,maxes])
 
 
 def combine_constraints(old, new):
@@ -73,13 +48,13 @@ def combine_constraints(old, new):
             flags[1].append(i)
         else:
             bounds[1].append(old[1][i])
-
-    if len(flags[0]) == 0 and len(flags[1]) == 1:
+    
+    if len(flags[0]) > 0 or len(flags[1]) > 0:
         print("Constraints improved:")
         for i in flags[0]:
-            print(bounds_order[i] + 'lower bound')
+            print(bounds_order[i] + ' lower bound')
         for i in flags[1]:
-            print(bounds_order[i] + 'upper bound')
+            print(bounds_order[i] + ' upper bound')
     else:
         print("No constraints improved.")
 

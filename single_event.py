@@ -1,5 +1,5 @@
 '''
-Program to update gravitational SME constraints with a single GW/EM counterpart data
+Program to update gravitational SME constraints with a single GW/EM counterpart
 Author: Tim Mikulski
 Date: 27 July 2018
 
@@ -42,6 +42,43 @@ def parse():
     return opts
 
 
+def new_constraints(opts):
+    ph = opts.ra * 360/24 * np.pi / 180 # azimuthal angle in radians
+    th = (90 - opts.dec) * np.pi / 180 # polar angle in radians
+
+    mins = []
+    maxes = []
+    negs = []
+    neg_indices = {(0,0):0, (1,0):1, (1,1,'re'):2, (1,1,'im'):3, (2,0):4, (2,1,'re'):5, (2,1,'im'):6, (2,2,'re'):7, (2,2,'im'):8}
+    d = 4
+
+    for j in range(d-1):
+        m = 0
+        maxes.append(opts.dvmax/(.5*(-1)**j*np.real(sph_harm(m,j,ph,th))))
+        mins.append(opts.dvmin/(.5*(-1)**j*np.real(sph_harm(m,j,ph,th))))
+        if (sph_harm(m,j,ph,th) > 0 and j == 1) or (sph_harm(m,j,ph,th) < 0 and j != 1):
+            negs.append((j,m))
+
+        for m in range(1,j+1):
+            maxes.append(opts.dvmax/((-1)**j*np.real(sph_harm(m,j,ph,th))))
+            mins.append(opts.dvmin/((-1)**j*np.real(sph_harm(m,j,ph,th))))
+            maxes.append(-opts.dvmax/((-1)**j*np.imag(sph_harm(m,j,ph,th))))
+            mins.append(-opts.dvmin/((-1)**j*np.imag(sph_harm(m,j,ph,th))))
+
+            if (np.real(sph_harm(m,j,ph,th)) > 0 and j == 1) or (np.real(sph_harm(m,j,ph,th)) < 0 and j != 1):
+                negs.append((j,m,'re'))
+
+            if (np.imag(sph_harm(m,j,ph,th)) < 0 and j == 1) or (np.imag(sph_harm(m,j,ph,th)) > 0 and j != 1):
+                negs.append((j,m,'im'))
+
+    mins = -abs(np.array(mins))
+    maxes = abs(np.array(maxes))
+
+    for item in negs:
+        (mins[neg_indices[item]], maxes[neg_indices[item]]) = (-maxes[neg_indices[item]], -mins[neg_indices[item]])
+
+    return np.array([mins,maxes]).round(decimals=16)
+
 # ============================
 #             MAIN
 # ============================
@@ -49,7 +86,7 @@ def parse():
 opts = parse()
 
 old = sgu.get_old_constraints(opts.data + 'coeffs.csv')
-new = sgu.new_constraints(opts)
+new = new_constraints(opts)
 bounds = sgu.combine_constraints(old, new)
 sgu.display_constraints(bounds)
 
