@@ -9,7 +9,10 @@ fractional velocity difference between gravitational and EM signals, and sky pos
 (RA and declination) of the event.
 '''
 
+from __future__ import print_function
+from scipy.special import sph_harm
 import sme_grav_utils as sgu
+import numpy as np
 import optparse
 
 

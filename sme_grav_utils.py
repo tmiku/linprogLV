@@ -98,3 +98,15 @@ def write_constraints(bounds, opts, loc = 'data/'):
 
     with open('outputs/coeffs.csv','w') as coeffs:
         coeffs.write(header + mins_str + maxes_str)
+
+
+def read_events(data):
+    events_file = open(data + 'events.csv')
+    events = []
+    first_line = True
+    for line in events_file:
+        if first_line:
+            first_line = False
+        else:
+            events.append(map(float,line.rstrip().split(',')))
+    return np.array(events)
