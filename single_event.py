@@ -94,7 +94,7 @@ bounds = sgu.combine_constraints(old, new)
 sgu.display_constraints(bounds)
 
 if opts.writenew:
-    sgu.write_constraints(bounds, opts)
+    sgu.write_constraints(bounds, opts, 'single')
     
 if opts.update:
-    sgu.update_constraints(bounds, opts)
+    sgu.update_constraints(bounds, opts, 'many')

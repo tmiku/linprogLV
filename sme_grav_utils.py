@@ -72,9 +72,10 @@ def display_constraints(bounds):
     print(a)
 
 
-def update_constraints(bounds, opts, loc = 'data/'):
-    with open(loc + 'events.csv','a') as events:
-        events.write('%s,%s,%s,%s\n' % (opts.ra, opts.dec, opts.dvmax, opts.dvmin))
+def update_constraints(bounds, opts, context, loc = 'data/'):
+    if context == 'single':
+        with open(loc + 'events.csv','a') as events:
+            events.write('%s,%s,%s,%s\n' % (opts.ra, opts.dec, opts.dvmax, opts.dvmin))
 
     header = ','.join(bounds_order) + '\n'
     mins_str = ','.join([str(b) for b in bounds[0]]) + '\n'
@@ -84,13 +85,14 @@ def update_constraints(bounds, opts, loc = 'data/'):
         coeffs.write(header + mins_str + maxes_str)
 
 
-def write_constraints(bounds, opts, loc = 'data/'):
+def write_constraints(bounds, opts, context, loc = 'data/'):
     if 'outputs' not in os.listdir('.'):
         os.mkdir('outputs')
-        
-    copyfile(loc + 'events.csv', 'outputs/events.csv')
-    with open('outputs/events.csv','a') as events:
-        events.write('%s,%s,%s,%s\n' % (opts.ra, opts.dec, opts.dvmax, opts.dvmin))
+    
+    if context == 'single':
+        copyfile(loc + 'events.csv', 'outputs/events.csv')
+        with open('outputs/events.csv','a') as events:
+            events.write('%s,%s,%s,%s\n' % (opts.ra, opts.dec, opts.dvmax, opts.dvmin))
     
     header = ','.join(bounds_order) + '\n'
     mins_str = ','.join([str(b) for b in bounds[0]]) + '\n'
