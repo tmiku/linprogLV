@@ -86,15 +86,16 @@ def new_constraints(opts):
 #             MAIN
 # ============================
 
-opts = parse()
+if __name__ == '__main__':
+    opts = parse()
 
-old = sgu.get_old_constraints(opts.data + 'coeffs.csv')
-new = new_constraints(opts)
-bounds = sgu.combine_constraints(old, new)
-sgu.display_constraints(bounds)
+    old = sgu.get_old_constraints(opts.data + 'coeffs.csv')
+    new = new_constraints(opts)
+    bounds = sgu.combine_constraints(old, new)
+    sgu.display_constraints(bounds)
 
-if opts.writenew:
-    sgu.write_constraints(bounds, opts, 'single')
-    
-if opts.update:
-    sgu.update_constraints(bounds, opts, 'many')
+    if opts.writenew:
+        sgu.write_constraints(bounds, opts, 'single')
+        
+    if opts.update:
+        sgu.update_constraints(bounds, opts, 'many')
