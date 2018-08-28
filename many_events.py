@@ -11,6 +11,7 @@ least nine events be present in data/events.csv.
 import sme_grav_utils as sgu
 import numpy as np
 import optparse
+import cvxopt
 from scipy.optimize import linprog
 from scipy.special import sph_harm
 
@@ -33,6 +34,10 @@ def parse():
     help = 'Write these results to new copies of coeffs.csv and events.csv (default false)')
     parser.add_option('-u', '--update', action = 'store_true', default = False,
     help = 'Update coeffs.csv and events.csv with new data (default false)')
+    parser.add_option('-p', '--package', default = 'scipy',
+    help = 'Package to use for solving linear program. Default = scipy, or choose cvxopt')
+    parser.add_option('-s', '--solver', default= 'simplex',
+    help = 'Method of solving linear program. Default = simplex for scipy/built-in for cvxopt')
 
     opts = parser.parse_args()[0]
 
@@ -46,10 +51,9 @@ def optimize(coeff, events, package='scipy', solver='simplex'):
     c_upper[coeff] = -1
     c_lower[coeff] = 1
 
-    a = np.zeros((len(events), 9))
-    b_max = np.array([])
-    b_min = np.array([])
-    n_event = 0
+    a = np.zeros((2 * len(events), 9))
+    b = np.array([])
+    n_bound = 0
 
     for event in events:
         ra = event[0]
@@ -67,18 +71,26 @@ def optimize(coeff, events, package='scipy', solver='simplex'):
                 temp = np.append(temp, (-1 ** ii[0]) * np.real(sph_harm(ii[1], ii[0], ph, th)))
                 temp = np.append(temp, -1 * (-1 ** ii[0]) * np.imag(sph_harm(ii[1], ii[0], ph, th)))
         
-        a[n_event] = temp
-        n_event += 1
+        a[n_bound] = temp
+        n_bound += 1
+        b = np.append(b, dvmax)
+        a[n_bound] = -temp
+        n_bound += 1
+        b = np.append(b, -dvmin)
 
-        b_max = np.append(b_max,dvmax)
-        b_min = np.append(b_min, dvmin)
-
-    dvmax_upper = -1 * linprog(c_upper, a, b_max, bounds=((None,None)), method=solver).fun
-    dvmax_lower = linprog(c_lower, a, b_max, bounds=((None,None)), method=solver).fun
-    dvmin_upper = -1 * linprog(c_upper, -a, -b_min, bounds=((None,None)), method=solver).fun
-    dvmin_lower = linprog(c_lower, -a, -b_min, bounds=((None,None)), method=solver).fun
+    if package == 'scipy':
+        min_sol = linprog(c_lower, a, b, bounds=(None,None), method=solver)
+        max_sol = linprog(c_upper, a, b, bounds=(None,None), method=solver)
+        lower = min_sol.x[coeff]
+        upper = max_sol.x[coeff]
     
-    bound = [max(dvmax_lower, dvmin_lower), min(dvmax_upper, dvmin_upper)]
+    elif package == 'cvxopt':
+        (a, b_max, b_min, c_upper, c_lower) = map(cvxopt.matrix, (a, b_max, b_min, c_upper, c_lower))
+        upper = cvxopt.solvers.lp(c_upper, a, b, solver='glpk' if solver=='glpk' else None)['x'][coeff]
+        lower = cvxopt.solvers.lp(c_lower, a, b, solver='glpk' if solver=='glpk' else None)['x'][coeff]
+    
+    bound = [lower, upper]
+    
 
     return np.array(bound)
 

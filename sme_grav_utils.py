@@ -64,6 +64,7 @@ def combine_constraints(old, new):
 def display_constraints(bounds):
     tab = tt.Texttable()
     tab.header(['Lower','s','upper'])
+    tab.set_cols_dtype(['e','t','e'])
 
     for i in range(len(bounds[0])):
         tab.add_row([bounds[0][i], bounds_order[i], bounds[1][i]])
