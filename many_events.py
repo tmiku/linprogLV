@@ -46,15 +46,20 @@ def parse():
 
 def optimize(coeff, events, package='scipy', solver='simplex'):
 
+    # coeff is the index number in bounds_order that is currently being optimized
+    # c_upper and c_lower are the polynomials to be optimized for the upper and lower bounds
     c_upper = np.zeros(9)
     c_lower = np.zeros(9)
     c_upper[coeff] = -1
     c_lower[coeff] = 1
 
+    # a is the matrix of coefficients for the linear optimization
+    # b is the list of constants, what each equation is less than or equal to
     a = np.zeros((2 * len(events), 9))
     b = np.array([])
     n_bound = 0
 
+    #these nested for loops build b and a using our array of event data
     for event in events:
         ra = event[0]
         dec = event[1]
@@ -78,6 +83,7 @@ def optimize(coeff, events, package='scipy', solver='simplex'):
         n_bound += 1
         b = np.append(b, -dvmin)
 
+    # how both packages work: optimize c^t * x with respect to a * x <= b
     if package == 'scipy':
         min_sol = linprog(c_lower, a, b, bounds=(None,None), method=solver)
         max_sol = linprog(c_upper, a, b, bounds=(None,None), method=solver)
@@ -91,7 +97,7 @@ def optimize(coeff, events, package='scipy', solver='simplex'):
     
     bound = [lower, upper]
     
-
+    # returns upper and lower bound for one coefficient
     return np.array(bound)
 
 

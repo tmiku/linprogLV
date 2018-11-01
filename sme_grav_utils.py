@@ -22,6 +22,7 @@ bounds_order = ['s_00','s_10','Re s_11','Im s_11','s_20','Re s_21','Im s_21','Re
 
 
 def get_old_constraints(loc):
+    # reads current best constraints csv in as nested list. first list is lower, second is upper
     with open(loc, 'r') as old_file:
         lines = old_file.readlines()
     mins = map(float,lines[1].split(','))
@@ -31,9 +32,10 @@ def get_old_constraints(loc):
 
 
 def combine_constraints(old, new):
+    # combines two nested lists of constraints and takes best value for each
     bounds = [[],[]]
     flags=[[],[]]
-
+    # flags contains list of indices of coefficients for which the new set was an improvement
 
     for i in range(len(new[0])):
     
@@ -62,6 +64,7 @@ def combine_constraints(old, new):
 
 
 def display_constraints(bounds):
+    # uses texttable to display the constraints that have been input
     tab = tt.Texttable()
     tab.header(['Lower','s','upper'])
     tab.set_cols_dtype(['e','t','e'])
@@ -74,6 +77,8 @@ def display_constraints(bounds):
 
 
 def update_constraints(bounds, opts, context, loc = 'data/'):
+    # makes changes to data/coeffs.csv according to newly derived constraints.
+    # context option is indicator to also update data/events.csv if single_event.py was run
     if context == 'single':
         with open(loc + 'events.csv','a') as events:
             events.write('%s,%s,%s,%s\n' % (opts.ra, opts.dec, opts.dvmax, opts.dvmin))
@@ -87,6 +92,8 @@ def update_constraints(bounds, opts, context, loc = 'data/'):
 
 
 def write_constraints(bounds, opts, context, loc = 'data/'):
+    # rewrites updated events.csv and coeffs.csv to a dedicated output folder
+    # this way test values will not be read into future runs of the program
     if 'outputs' not in os.listdir('.'):
         os.mkdir('outputs')
     
@@ -104,6 +111,7 @@ def write_constraints(bounds, opts, context, loc = 'data/'):
 
 
 def read_events(data):
+    # reads events.csv as nested list where each inner list is [ra, dec, dvmax, dvmin]
     events_file = open(data + 'events.csv')
     events = []
     first_line = True

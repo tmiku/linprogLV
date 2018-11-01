@@ -1,0 +1,69 @@
+\documentclass[11pt,notitlepage]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{verbatim}
+\usepackage{url}
+
+\title{linprogLV: Linear programming to constrain coefficients for Lorentz violation}
+\author{Timothy Mikulski\\
+\texttt{mikulskit@carleton.edu}
+\and
+Jay D. Tasson\\
+\texttt{jtasson@carleton.edu}
+}
+
+\date{October 2018}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+
+The advent of multi-messenger gravitational wave astronomy has opened the door to advancements in many fields of physics, including the Standard Model Extension (SME). General relativity predicts that gravitational and electromagnetic waves propagate at the same speed, so differences in arrival times between these signals from the same event could indicate Lorentz violation in the gravitational sector of the SME. This code package, written in Python 2.7 and available at \url{https://github.com/t-mikulski/linprogLV}, contains tools to constrain coefficients for Lorentz violation using data from multi-messenger astronomy.
+
+\section{Background}
+
+On 17 August 2017, a binary neutron star (BNS) merger approximately 40 Mpc from earth created the gravitational wave GW170817, detected by LIGO and Virgo, as well as the gamma ray burst GRB170817A, detected by the Fermi GBM. Additional electromagnetic signals of decreasing frequencies were detected after the merger, but for the purpose of Lorentz violation testing it is only useful to consider the first electromagnetic signal to arrive. GRB170817A arrived approximately 2 seconds after GW170817; as such, two values $\Delta v_{min}$ and $\Delta v_{max}$ were established using the event's distance from earth and the possibilities of emission time that respectively minimize and maximize the speed of the electromagnetic signal relative to the gravitational signal. We can describe the relation between difference in velocity and coefficients for Lorentz violation by the equation
+\begin{equation}
+\label{eqn:dv}
+\Delta v = - \sum_{\substack{\ell m \\ \ell \leq 2}}
+Y_{\ell m}(\hat{n}) 
+\left(\frac{1}{2} (-1)^{1+\ell} \bar{s}_{\ell m} - \bar{c}_{\ell m}\right)\text{,}
+\end{equation}
+where $Y_{\ell m}$ is a spherical harmonic, $\hat{n}$ is the position of the event in the sky, and $\bar{s}$ and $\bar{c}$ are coefficients for Lorentz violation in the gravitational and electromagnetic sectors, respectively.
+
+\section{Packages}
+The codebase requires the following packages:
+\begin{itemize}
+    \item NumPy
+    \item SciPy
+    \item optparse
+    \item cvxopt
+\end{itemize}
+Each of these packages can be installed in a Unix terminal with the command \texttt{pip install [package name]}. Please note that this codebase is untested on non-Unix operating systems, as well as with Python 3. 
+
+\section{Basic options}
+To use linprogLV, run either \texttt{python single\_event.py \textit{[options]}} or \texttt{python many\_events.py \textit{[options]}}. Some options are dependent on whether you are running for single or multiple events, but the following three are available (and optional) for either program.
+\begin{itemize}
+    \item \texttt{-d \textit{[directory]}} or \texttt{--data \textit{[directory]}}: The directory containing the files \textit{events.csv} and \textit{coeffs.csv}. \textit{events.csv} contains parameters for each known event: right ascension in hours, declination in degrees, and $\Delta v_{max}$ and $\Delta v_{min}$. \textit{coeffs.csv} contains the upper and lower bounds on the 9 coefficients (complex coefficients are separated into real and imaginary parts) for gravitational Lorentz violation in mass dimension 4. The default directory is the \textit{/data} directory in the main path of the codebase.
+    \item \texttt{-w} or \texttt{--writenew}: If this option is present, the program will write an updated \textit{coeffs.csv} file with updated constraints to the \textit{/outputs} directory in the main path of the codebase. This will also write a new, updated \textit{events.csv} file if used for the single event program.
+    \item \texttt{-u} or \texttt{--update}: If this option is present, the program will update the files in the \textit{/data} directory (or other directory specified with \texttt{-d}) rather than writing new ones.
+    \item Running the program with neither \texttt{-w} nor \texttt{-u} will only display the updated constraints on the screen, and not save them.
+\end{itemize}
+
+\section{Use for a single event}
+The single event program is run with \texttt{python single\_event.py \textit{[options]}}. It requires four additional input options:
+\begin{itemize}
+    \item \texttt{--ra}: the right ascension (in hours) of the event.
+    \item \texttt{--dec}: the declination (in degrees) of the event.
+    \item \texttt{--dvmax}: the maximum fractional difference in velocity between the electromagnetic and gravitational signals ($\Delta v_{max}$).
+    \item \texttt{--dvmin}: the minimum fractional difference in velocity between the electromagnetic and gravitational signals ($\Delta v_{min}$).
+\end{itemize}
+
+\section{Use for multiple events}
+The multiple event program uses data from \textit{events.csv} rather than data input on the command line. At least nine events must be present in \textit{events.csv}. There are two options available, that determine how to solve the linear programming constraint:
+\begin{itemize}
+    \item \texttt{-p \textit{[package]}} or \texttt{--package \textit{[package]}}: the package from which to use the linear program solver. Choose \texttt{scipy} or \texttt{cvxopt}. The default is SciPy.
+    \item \texttt{-s \textit{[solver]}} or \texttt{--solver \textit{[solver]}}: the declination (in degrees) of the event. For SciPy, choose \texttt{simplex} (default) or \texttt{interior-point}. For cvxopt, the default is the built-in solver, but you can choose \texttt{glpk}.
+\end{itemize}
+\end{document}

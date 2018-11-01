@@ -57,17 +57,21 @@ def new_constraints(opts):
 
     for j in range(d-1):
         m = 0
+        # for m=0, we don't have any imaginary parts to worry about
         maxes.append(opts.dvmax/(.5*(-1)**j*np.real(sph_harm(m,j,ph,th))))
         mins.append(opts.dvmin/(.5*(-1)**j*np.real(sph_harm(m,j,ph,th))))
+        # account for which spherical harmonics make the function return a negative and consequently flip the inequality
         if (sph_harm(m,j,ph,th) > 0 and j == 1) or (sph_harm(m,j,ph,th) < 0 and j != 1):
             negs.append((j,m))
 
         for m in range(1,j+1):
+            # here, we begin splitting Re and Im parts. do each spherical harmonic's real part first
             maxes.append(opts.dvmax/((-1)**j*np.real(sph_harm(m,j,ph,th))))
             mins.append(opts.dvmin/((-1)**j*np.real(sph_harm(m,j,ph,th))))
             maxes.append(-opts.dvmax/((-1)**j*np.imag(sph_harm(m,j,ph,th))))
             mins.append(-opts.dvmin/((-1)**j*np.imag(sph_harm(m,j,ph,th))))
 
+            # again, take note of which spherical harmonics come in negative
             if (np.real(sph_harm(m,j,ph,th)) > 0 and j == 1) or (np.real(sph_harm(m,j,ph,th)) < 0 and j != 1):
                 negs.append((j,m,'re'))
 
@@ -77,6 +81,7 @@ def new_constraints(opts):
     mins = -abs(np.array(mins))
     maxes = abs(np.array(maxes))
 
+    # adjust for negative spherical harmonics--some flip
     for item in negs:
         (mins[neg_indices[item]], maxes[neg_indices[item]]) = (-maxes[neg_indices[item]], -mins[neg_indices[item]])
 
